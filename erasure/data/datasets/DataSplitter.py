@@ -28,7 +28,7 @@ class DataSplitterPercentage(DataSplitter):
         super().__init__(ref_data,parts_names) 
         self.percentage = percentage
         self.shuffle = shuffle
-
+              
     def split_data(self,partitions):
         indices = partitions[self.ref_data] if self.ref_data != 'all' else list(range(len(partitions[self.ref_data].data)))
 
@@ -166,12 +166,6 @@ class DataSplitterList(DataSplitter):
         partitions[self.parts_names[1]] = split_indices_2
 
         return partitions
-    
-class DataSplitterByZ(DataSplitter):
-    def __init__(self, z_labels, parts_names, ref_data = 'all'):
-        super().__init__(ref_data,parts_names) 
-        self.z_labels = z_labels
-
 
 class DataSplitterByZ(DataSplitter):
     def __init__(self, z_labels, parts_names, ref_data = 'all'):

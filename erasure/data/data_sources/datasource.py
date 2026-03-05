@@ -45,13 +45,13 @@ class DataSource(Configurable):
 
         try:
             dataloader = DataLoader(dataset, batch_size=1) if not isinstance(dataset[0][0], Data) else GeometricDataLoader(dataset, batch_size=1)
-            for _, _ in zip(dataloader, range(5)): 
+            for x, y in zip(dataloader, range(5)): 
                 pass
 
             return True  
         except Exception as e:
             raise ValueError(f"Dataset from {self.get_name()} failed integrity check: {e}. Dataset.data must be iterable by Pytorch's dataloader.")
-
+        
     def create_and_validate_data(self) -> DatasetWrapper:
         """
         Validates the data integrity before creating the dataset.
