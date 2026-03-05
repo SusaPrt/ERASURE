@@ -72,7 +72,7 @@ class DatasetManager(Configurable):
         return main_loader
            
            
-    def get_loader_for(self, split_id, fold_fraction = None, drop_last=True):
+    def get_loader_for(self, split_id, fold_fraction = None, drop_last=False):
 
         fold_fraction = None
         ref_data = self.ref_data_dict[split_id]

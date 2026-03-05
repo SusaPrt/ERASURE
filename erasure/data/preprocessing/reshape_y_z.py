@@ -85,3 +85,24 @@ class reshape_y_z_legacy(Preprocess):
         super().check_configuration()
         self.local_config['parameters']['keep_as_y'] = self.local_config['parameters'].get('keep_as_y',0)
 
+class split_labels_from_ids(Preprocess):
+    def __init__(self, global_ctx, local_ctx):
+        super().__init__(global_ctx, local_ctx)
+        self.keep_as_y = self.local_config['parameters'].get('keep_as_y', [])
+        self.move_to_z = self.local_config['parameters'].get('move_to_z', [])
+    
+    def process(self, X, y, z):
+        z = y.clone()
+        if len(y.shape) == 1:
+            y = y[self.keep_as_y]
+            z = z[self.move_to_z]
+        else:
+            y = y[:, self.keep_as_y]
+            z = z[:, self.move_to_z]
+
+        return X, y, z
+
+    def check_configuration(self):
+        super().check_configuration()
+        self.local_config['parameters']['keep_as_y'] = self.local_config['parameters'].get('keep_as_y', [])
+        self.local_config['parameters']['move_to_z'] = self.local_config['parameters'].get('move_to_z', [])
