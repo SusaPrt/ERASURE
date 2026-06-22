@@ -123,7 +123,6 @@ class HAR_CSV_DataSource(DataSource):
 
         print("[DEBUG] HAR_CSV_DataSource: Final data shape:", X.shape, labels.shape, ids.shape if ids is not None else None, position.shape if position is not None else None)
 
-        X = torch.Tensor(X).long()
         if position is None and ids is not None:
             y_comb = np.stack([labels, ids], axis=0)
             y_comb = y_comb.T

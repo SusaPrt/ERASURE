@@ -186,10 +186,13 @@ class SaveValues(Measure):
         return e
 
     def process_json(self, e):
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        dir_name = os.path.dirname(self.path)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+        # JSON Lines: one valid, self-contained JSON object per line, appended per evaluation
         with open(self.path, 'a') as json_file:
-            json.dump(e.data_info, json_file, indent=4)
-            json_file.write(',')
+            json.dump(e.data_info, json_file)
+            json_file.write('\n')
 
     def process_csv(self, e):
         df = pd.DataFrame.from_dict([self.flatten_dict(e.data_info)])
