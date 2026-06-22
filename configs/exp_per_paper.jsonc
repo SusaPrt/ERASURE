@@ -357,8 +357,12 @@
               "parameters": {"partition": "forget", "target": "unlearned", "name": "f1_macro", "function": { "class": "sklearn.metrics.f1_score", "parameters": { "average": "macro" } }}},
               {"class": "erasure.evaluations.measures.TorchSKLearn",
               "parameters": {"partition": "forget", "target": "original", "name": "f1_macro", "function": { "class": "sklearn.metrics.f1_score", "parameters": { "average": "macro" } }}},
+              {"class": "erasure.evaluations.measures.TorchSKLearn",
+              "parameters": {"partition": "retain", "target": "unlearned", "name": "f1_macro", "function": { "class": "sklearn.metrics.f1_score", "parameters": { "average": "macro" } }}},
+              {"class": "erasure.evaluations.measures.TorchSKLearn",
+              "parameters": {"partition": "retain", "target": "original", "name": "f1_macro", "function": { "class": "sklearn.metrics.f1_score", "parameters": { "average": "macro" } }}},
               {"class": "erasure.evaluations.measures.RelearnTime", "parameters":{"forget_part": "forget"}},
-              {"class": "erasure.evaluations.measures.AIN", "parameters":{"forget_part": "forget","alpha": 0.001,
+              {"class": "erasure.evaluations.measures.AIN", "parameters":{"forget_part": "forget","alpha": 0.05,
               "gold_model": {"class": "erasure.unlearners.GoldModel.GoldModel","parameters": {"cached": true}}}},
 
               {"compose_umia" : "configs/snippets/e_umia.json"},
