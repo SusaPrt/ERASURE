@@ -5,7 +5,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from copy import copy
+from copy import deepcopy
 
 from erasure.core.factory_base import get_instance_kvargs
 
@@ -54,7 +54,7 @@ class Scrub(TorchUnlearner):
 
         forget_loader, _ = self.dataset.get_loader_for(self.ref_data_forget, Fraction('0'))
 
-        self.teacher = copy(self.predictor.model)
+        self.teacher = deepcopy(self.predictor.model)
 
         total_loss_retain = 0
         total_loss_forget = 0
