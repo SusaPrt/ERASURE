@@ -107,9 +107,6 @@ class UCI_Adult_DataSource(UCIRepositoryDataSource):
 
         return self.get_simple_wrapper(self.dataset)
     
-"""
-id: 755 url: https://archive.ics.uci.edu/dataset/755/accelerometer+gyro+mobile+phone+dataset
-"""
 class UCI_HAR_DataSource(UCIRepositoryDataSource):
     def create_data(self):
         if self.dataset is None:
@@ -145,6 +142,8 @@ class UCI_HAR_DataSource(UCIRepositoryDataSource):
         y = []
         data_array = pddataset[self.data_columns].to_numpy()
         label_array = pddataset[self.label].to_numpy().astype(int)
+
+        # windowing
         for start in range(0, len(data_array) - window_size + 1, window_size):
             end = start + window_size
             windows.append(data_array[start:end])

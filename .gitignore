@@ -17,5 +17,6 @@ result_analysis_short_bench.ipynb
 configs/ICLR_benchmark/*
 configs/resource/*
 configs_iclr/*
+configs/exp_per_paper.jsonc
 jsonc_school_cikm/*
 *.sh

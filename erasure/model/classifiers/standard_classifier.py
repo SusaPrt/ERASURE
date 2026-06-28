@@ -61,50 +61,7 @@ class SpotifyNN(nn.Module):
         return intermediate_output, x
 
 class HAR_NN(nn.Module):
-    def __init__(self, n_classes, inputsize=(6,128)):
-        super(HAR_NN, self).__init__()
-        
-        channels, seq_len = inputsize
-        self.conv1 = nn.Conv1d(in_channels=channels, out_channels=64, kernel_size=5)
-        self.bn1   = nn.BatchNorm1d(64)
-        
-        self.conv2 = nn.Conv1d(64, 128, kernel_size=5)
-        self.bn2   = nn.BatchNorm1d(128)
-        
-        self.conv3 = nn.Conv1d(128, 256, kernel_size=3)
-        self.bn3   = nn.BatchNorm1d(256)
-        
-        self.pool = nn.MaxPool1d(kernel_size=2)
-        self.dropout = nn.Dropout(0.5)
-
-        self._to_linear = None
-        self._get_conv_output(inputsize)
-
-        self.fc1 = nn.Linear(self._to_linear, 128)
-        self.fc2 = nn.Linear(128, n_classes)
-
-    def _get_conv_output(self, shape):
-        with torch.no_grad():
-            x = torch.zeros(1, *shape)
-            x = self.pool(F.relu(self.bn1(self.conv1(x))))
-            x = self.pool(F.relu(self.bn2(self.conv2(x))))
-            x = self.pool(F.relu(self.bn3(self.conv3(x))))
-            self._to_linear = x.numel()
-
-    def forward(self, x):
-        x = self.pool(F.relu(self.bn1(self.conv1(x))))
-        x = self.pool(F.relu(self.bn2(self.conv2(x))))
-        x = self.pool(F.relu(self.bn3(self.conv3(x))))
-        
-        x = torch.flatten(x, 1)
-
-        intermediate_output = x
-
-        x = self.dropout(F.relu(self.fc1(x)))
-        x = self.fc2(x)
-        
-        return intermediate_output, x
-"""    def __init__(self, n_classes, inputsize=(6,128), hidden_size=64, kernel_size=6):
+    def __init__(self, n_classes, inputsize=(6,128), hidden_size=64, kernel_size=6):
         super(HAR_NN, self).__init__()
         in_channels = inputsize[0]
 
@@ -143,4 +100,64 @@ class HAR_NN(nn.Module):
         out = self.fc2(out)
         out = self.fc3(out)
 
-        return intermediate_output, out"""
+        return intermediate_output, out
+    
+  # PAMAP2 - 18 different physical activities, performed by 9 subjects wearing 3 inertial measurement units and a heart rate monitor.
+  # realWorld2016 contains 15 subjects. 8 Activities: 0: climbingdown 1: climbingup 2: jumping 3: lying 4: running 5: sitting 6: standing 7: walking, 7 positions: chest, forearm, head, shin, thigh, upper arm, and waist.
+
+class DeepConvLSTM(nn.Module):    
+    def __init__(self, n_classes, n_hidden=128, n_layers=1, n_filters=64, filter_size=5, drop_prob=0.5, NB_SENSOR_CHANNELS=6, SLIDING_WINDOW_LENGTH=128, train_on_gpu=True):
+        super(DeepConvLSTM, self).__init__()
+        self.drop_prob = drop_prob
+        self.n_layers = n_layers
+        self.n_hidden = n_hidden
+        self.n_filters = n_filters
+        self.n_classes = n_classes
+        self.filter_size = filter_size
+        self.NB_SENSOR_CHANNELS = NB_SENSOR_CHANNELS
+        self.SLIDING_WINDOW_LENGTH = SLIDING_WINDOW_LENGTH
+        self.train_on_gpu = train_on_gpu
+
+        self.conv1 = nn.Conv1d(self.NB_SENSOR_CHANNELS, n_filters, self.filter_size)
+        self.conv2 = nn.Conv1d(n_filters, n_filters, self.filter_size)
+        self.conv3 = nn.Conv1d(n_filters, n_filters, self.filter_size)
+        self.conv4 = nn.Conv1d(n_filters, n_filters, self.filter_size)
+
+        self.lstm1  = nn.LSTM(n_filters, n_hidden, n_layers)
+        self.lstm2  = nn.LSTM(n_hidden, n_hidden, n_layers)
+        
+        self.fc = nn.Linear(n_hidden, n_classes)
+
+        self.dropout = nn.Dropout(drop_prob)
+    
+    def forward(self, x, hidden, batch_size):
+        
+        x = x.view(-1, self.NB_SENSOR_CHANNELS, self.SLIDING_WINDOW_LENGTH)
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv4(x))
+        
+        x = x.view(8, -1, self.n_filters)
+        x, hidden = self.lstm1(x, hidden)
+        x, hidden = self.lstm2(x, hidden)
+        
+        x = x.contiguous().view(-1, self.n_hidden)
+        x = self.dropout(x)
+        x = self.fc(x)
+        
+        out = x.view(batch_size, -1, self.n_classes)[:,-1,:]
+        
+        return hidden,out
+    
+    def init_hidden(self, batch_size):
+        weight = next(self.parameters()).data
+        
+        if (self.train_on_gpu):
+            hidden = (weight.new(self.n_layers, batch_size, self.n_hidden).zero_().cuda(),
+                  weight.new(self.n_layers, batch_size, self.n_hidden).zero_().cuda())
+        else:
+            hidden = (weight.new(self.n_layers, batch_size, self.n_hidden).zero_(),
+                      weight.new(self.n_layers, batch_size, self.n_hidden).zero_())
+        
+        return hidden

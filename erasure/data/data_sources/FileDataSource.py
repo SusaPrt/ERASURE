@@ -1,8 +1,8 @@
 from pathlib import Path
 import numpy as np
 from .datasource import DataSource
-from erasure.data.datasets.Dataset import DatasetWrapper 
-from torch.utils.data import ConcatDataset
+from erasure.data.datasets.Dataset import DatasetExtendedWrapper, DatasetWrapper 
+from torch.utils.data import ConcatDataset, TensorDataset
 from erasure.utils.config.global_ctx import Global
 from erasure.utils.config.local_ctx import Local
 import inspect 
@@ -112,14 +112,38 @@ class HAR_CSV_DataSource(DataSource):
                 positions.append(majority_position)
 
         print("[DEBUG] HAR_CSV_DataSource: Data shape after windowing:", np.stack(windows).shape)
-        X = np.stack(windows)           # (samples, window_size, n_features)
+
+
+        # balancing all classes to the same number of samples as the class with the least samples
+        class_counts = np.bincount(labels)
+        min_class_count = class_counts[class_counts > 0].min()
+        balanced_windows = []
+        balanced_labels = []
+        balanced_ids = []
+        balanced_positions = []
+        for class_label in np.unique(labels):
+            class_indices = np.where(np.array(labels) == class_label)[0]
+            if len(class_indices) > min_class_count:
+                selected_indices = np.random.choice(class_indices, min_class_count, replace=False)
+            else:
+                selected_indices = class_indices
+            balanced_windows.extend([windows[i] for i in selected_indices])
+            balanced_labels.extend([labels[i] for i in selected_indices])
+            if self.id_columns:
+                balanced_ids.extend([ids[i] for i in selected_indices])
+            if self.pos_columns:
+                balanced_positions.extend([positions[i] for i in selected_indices])
+
+        print("[DEBUG] UCI_HAR_DataSource: after balancing, dataset shape:", np.stack(balanced_windows).shape)
+
+        X = np.stack(balanced_windows)           # (samples, window_size, n_features)
         X = X.transpose(0,2,1)          # (samples, n_features, window_size)
-        labels = np.array(labels)
+        labels = np.array(balanced_labels)
         if labels.min() != 0:
             labels = labels - labels.min()
         
-        ids = np.array(ids) if self.id_columns else None
-        position = np.array(positions) if self.pos_columns else None
+        ids = np.array(balanced_ids) if self.id_columns else None
+        position = np.array(balanced_positions) if self.pos_columns else None
 
         print("[DEBUG] HAR_CSV_DataSource: Final data shape:", X.shape, labels.shape, ids.shape if ids is not None else None, position.shape if position is not None else None)
 
