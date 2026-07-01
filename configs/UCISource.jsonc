@@ -4,7 +4,7 @@
                   "DataSource": { "class":"erasure.data.data_sources.UCIRepositoryDataSource.UCI_HAR_DataSource", 
                   "parameters": {"id": 755, "label":"Activity", "data_columns":["accX","accY","accZ","gyroX","gyroY","gyroZ"], "window_size":128, 
                   "preprocess": [
-                    //{"class":"erasure.data.preprocessing.reshape_y_z.split_labels_from_ids", "parameters":{"keep_as_y":0, "move_to_z":1}}
+                    //{"class":"erasure.data.preprocessing.reshape_y_z.split_y_z", "parameters":{"keep_as_y":0, "move_to_z":1}}
                   ]
 
                 }
@@ -37,6 +37,7 @@
           },
           "model": {
             "class": "erasure.model.classifiers.standard_classifier.HAR_NN","parameters": {"n_classes": 2}
+            // "class": "erasure.model.classifiers.standard_classifier.DeepConvLSTM","parameters": {"n_classes": 2, "train_on_gpu": false}
           }
         }
       },

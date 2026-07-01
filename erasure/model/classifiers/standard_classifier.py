@@ -106,7 +106,7 @@ class HAR_NN(nn.Module):
   # realWorld2016 contains 15 subjects. 8 Activities: 0: climbingdown 1: climbingup 2: jumping 3: lying 4: running 5: sitting 6: standing 7: walking, 7 positions: chest, forearm, head, shin, thigh, upper arm, and waist.
 
 class DeepConvLSTM(nn.Module):    
-    def __init__(self, n_classes, n_hidden=128, n_layers=1, n_filters=64, filter_size=5, drop_prob=0.5, NB_SENSOR_CHANNELS=6, SLIDING_WINDOW_LENGTH=128, train_on_gpu=True):
+    def __init__(self, n_classes, train_on_gpu, n_hidden=128, n_layers=1, n_filters=64, filter_size=5, drop_prob=0.5, NB_SENSOR_CHANNELS=6, SLIDING_WINDOW_LENGTH=128):
         super(DeepConvLSTM, self).__init__()
         self.drop_prob = drop_prob
         self.n_layers = n_layers
@@ -123,14 +123,17 @@ class DeepConvLSTM(nn.Module):
         self.conv3 = nn.Conv1d(n_filters, n_filters, self.filter_size)
         self.conv4 = nn.Conv1d(n_filters, n_filters, self.filter_size)
 
-        self.lstm1  = nn.LSTM(n_filters, n_hidden, n_layers)
-        self.lstm2  = nn.LSTM(n_hidden, n_hidden, n_layers)
+        self.lstm1  = nn.LSTM(n_filters, n_hidden, n_layers, batch_first=True)
+        self.lstm2  = nn.LSTM(n_hidden, n_hidden, n_layers, batch_first=True)
         
         self.fc = nn.Linear(n_hidden, n_classes)
 
         self.dropout = nn.Dropout(drop_prob)
     
-    def forward(self, x, hidden, batch_size):
+    def forward(self, x):
+
+        batch_size = x.size(0)  
+        hidden = self.init_hidden(batch_size)
         
         x = x.view(-1, self.NB_SENSOR_CHANNELS, self.SLIDING_WINDOW_LENGTH)
         x = F.relu(self.conv1(x))
@@ -138,7 +141,7 @@ class DeepConvLSTM(nn.Module):
         x = F.relu(self.conv3(x))
         x = F.relu(self.conv4(x))
         
-        x = x.view(8, -1, self.n_filters)
+        x = x.view(batch_size, -1, self.n_filters)
         x, hidden = self.lstm1(x, hidden)
         x, hidden = self.lstm2(x, hidden)
         

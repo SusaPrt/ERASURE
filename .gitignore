@@ -18,5 +18,8 @@ configs/ICLR_benchmark/*
 configs/resource/*
 configs_iclr/*
 configs/exp_per_paper.jsonc
+configs/fileSource.jsonc
+configs/generate_unlearning_configs.py
+configs/mu4har/*
 jsonc_school_cikm/*
 *.sh
